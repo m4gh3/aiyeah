@@ -3,18 +3,21 @@
 #include "desc.hpp"
 
 const size_t inputs_n = 2;
-const size_t overwrite_offs = 0;
-const size_t cells_n = 1;
+const size_t overwrite_offs = 2;
+const size_t cells_n = 2;
 const size_t trans_n = 0;
 const size_t weights_n = cells_n*3*(cells_n+inputs_n+2);
 
-float weights[weights_n] = {	0.75, 0.25, 0.0, 0.0, 0.0,
-				0.05, 0.9,  0.0, 0.05, 0.0,
-				0.05, 0.05, 0.0, 0.9, 0.0 };
+float weights[weights_n] = {	0.75, 0.25, 0.0, 0.0, 0.0, 0.0,
+				0.05, 0.9,  0.0, 0.05, 0.0, 0.0,
+				0.05, 0.05, 0.0, 0.9, 0.0, 0.0, 
+				0.75, 0.25, 0.0, 0.0, 0.0, 0.0,
+				0.05, 0.9,  0.0, 0.05, 0.0, 0.0,
+				0.05, 0.05, 0.0, 0.9, 0.0, 0.0 };
 
 diffbl weights_diffbl[weights_n]; //they should be entered here
 float weights_der[weights_n];
-diffbl inputs[inputs_n+cells_n-trans_n+2]={ diffbl{0,0}, diffbl{0,0}, diffbl{0,0}, diffbl{1,0}, diffbl{0,0} };
+diffbl inputs[inputs_n+cells_n-trans_n+2]={ diffbl{0,0}, diffbl{0,0}, diffbl{0,0}, diffbl{0,0}, diffbl{1,0}, diffbl{0,0} };
 diffbl outputs[3*cells_n];
 
 void evolve()
@@ -32,13 +35,16 @@ std::uniform_real_distribution<float> rand_test(0.0f, 1.0f );
 int main()
 {
 	//float guess;
-	float step = 0.1;
-	for(size_t test=0; test < 40000; test++ )
+	float step = 0.5;
+	for(size_t test=0; test < 100000; test++ )
 	{
 		float test_value = rand_test(gen);
 		float test_value1 = rand_test(gen);
+		test_value = test_value < 0.5 ? 0.5*test_value : 1-0.5*(1-test_value);
+		test_value1 = test_value1 < 0.5 ? 0.5*test_value1 : 1-0.5*(1-test_value1);
+
 		diffbl output;
-		size_t len[2] = {3,inputs_n+cells_n-trans_n+2};
+		size_t len[2] = {3*cells_n,inputs_n+cells_n-trans_n+2};
 		for(size_t i=0,k=0; i < len[0]*len[1]; k++,i+=len[1] )
 			for(size_t j=0; j < len[1]; j++ )
 			{
@@ -47,12 +53,13 @@ int main()
 				size_t temp[2] = {k,j};
 				gen_diffbl_vec(weights_diffbl, weights, temp, len );
 				evolve();
-				weights_der[i+j] = inputs[0].der;
+				evolve();
+				weights_der[i+j] = inputs[overwrite_offs].der;
 			}
-		float target=(1-test_value)*test_value1;
-		descent(target, inputs[0].val, step, weights, weights_der, len[0]*len[1] );
+		float target= test_value+test_value1-2*test_value*test_value1;
+		descent(target, inputs[overwrite_offs].val, step, weights, weights_der, len[0]*len[1] );
 		normalize(weights, len );
-		std::cout << "guess: " << inputs[0].val << " target: " << target << " step: " << step << std::endl << "weights_der: ";
+		std::cout << "guess: " << inputs[overwrite_offs].val << " target: " << target << " step: " << step << std::endl << "weights_der: ";
 		for(size_t i=0; i < len[0]*len[1]; i++ )
 			std::cout << weights_der[i] << ' ';
 		std::cout << std::endl << "weights:\t";
