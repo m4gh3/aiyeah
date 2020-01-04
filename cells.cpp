@@ -35,8 +35,9 @@ std::uniform_real_distribution<float> rand_test(0.0f, 1.0f );
 int main()
 {
 	//float guess;
-	float step = 0.5;
-	for(size_t test=0; test < 100000; test++ )
+	float step = 0.8;
+	float avg_err=0;
+	for(size_t test=0; test < 500000; test++ )
 	{
 		float test_value = rand_test(gen);
 		float test_value1 = rand_test(gen);
@@ -50,6 +51,8 @@ int main()
 			{
 				inputs[0].val = test_value;
 				inputs[1].val = test_value1;
+				inputs[2].val=0;
+				inputs[3].val=0;
 				size_t temp[2] = {k,j};
 				gen_diffbl_vec(weights_diffbl, weights, temp, len );
 				evolve();
@@ -58,19 +61,38 @@ int main()
 			}
 		float target= test_value+test_value1-2*test_value*test_value1;
 		descent(target, inputs[overwrite_offs].val, step, weights, weights_der, len[0]*len[1] );
+		avg_err += abs(target-inputs[overwrite_offs].val);
 		normalize(weights, len );
-		std::cout << "guess: " << inputs[overwrite_offs].val << " target: " << target << " step: " << step << std::endl << "weights_der: ";
-		for(size_t i=0; i < len[0]*len[1]; i++ )
-			std::cout << weights_der[i] << ' ';
-		std::cout << std::endl << "weights:\t";
-		for(size_t i=0; i < len[0]*len[1]; i+=len[1] )
+		if(test%5000 == 0)
 		{
-			for(size_t j=0; j < len[1]; j++ )
-				std::cout << weights[i+j] << ' ';
-			std::cout << std::endl << "\t\t" ;
+			avg_err/=5000;
+			std::cout << "guess: " << inputs[overwrite_offs].val << " target: " << target << " step: " << step << " avg_err: " << avg_err << std::endl << "weights_der: ";
+			for(size_t i=0; i < len[0]*len[1]; i++ )
+				std::cout << weights_der[i] << ' ';
+			std::cout << std::endl << "weights:\t";
+			for(size_t i=0; i < len[0]*len[1]; i+=len[1] )
+			{
+				for(size_t j=0; j < len[1]; j++ )
+					std::cout << weights[i+j] << ' ';
+				std::cout << std::endl << "\t\t" ;
+			}
+			std::cout << std::endl << "-----------------" << std::endl;
+			avg_err=0;
 		}
-		std::cout << std::endl << "-----------------" << std::endl;
 		step*=0.99999;
 	}
-
+	while(true)
+	{
+		std::cin >> inputs[0].val;
+		std::cin  >> inputs[1].val;
+		inputs[2].val=0;
+		inputs[3].val=0;
+		size_t temp[2] = {0,0}, len[2] = {3*cells_n,inputs_n+cells_n-trans_n+2};
+		gen_diffbl_vec(weights_diffbl, weights, temp, len );
+		evolve();
+		std::cout << inputs[overwrite_offs].val << ' '
+		<< inputs[overwrite_offs+1].val << std::endl;
+		evolve();
+		std::cout << inputs[overwrite_offs].val << std::endl;
+	}
 }
