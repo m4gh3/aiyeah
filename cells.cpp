@@ -44,7 +44,6 @@ int main()
 		test_value = test_value < 0.5 ? 0.5*test_value : 1-0.5*(1-test_value);
 		test_value1 = test_value1 < 0.5 ? 0.5*test_value1 : 1-0.5*(1-test_value1);
 
-		diffbl output;
 		size_t len[2] = {3*cells_n,inputs_n+cells_n-trans_n+2};
 		for(size_t i=0,k=0; i < len[0]*len[1]; k++,i+=len[1] )
 			for(size_t j=0; j < len[1]; j++ )
