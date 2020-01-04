@@ -24,8 +24,8 @@ void evolve()
 {
 	size_t len[2]={3*cells_n,inputs_n+cells_n-trans_n+2};
 	scalar_prod<diffbl>(outputs, weights_diffbl, inputs, diffbl{0,0}, len );
-	for(size_t k=0; k < cells_n*3; k+=3 )
-		inputs[overwrite_offs+k] = (1-outputs[k+2])*outputs[k]+outputs[k+2]*outputs[k+1];
+	for(size_t k=0, l=0; k < cells_n*3; l++,k+=3 )
+		inputs[overwrite_offs+l] = (1-outputs[k+2])*outputs[k]+outputs[k+2]*outputs[k+1];
 }
 
 std::random_device rd;
