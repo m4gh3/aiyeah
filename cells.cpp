@@ -32,54 +32,84 @@ std::random_device rd;
 std::mt19937 gen(rd());
 std::uniform_real_distribution<float> rand_test(0.0f, 1.0f );
 
-int main()
+template<class lambda0, class lambda1, class lambda2 > void train(float target, lambda0 cost, float step, float decay, size_t iterations, size_t show_progress_freq, bool show_weights, lambda1 get_sample, lambda2 restore_sample, size_t evolution_cycles )
 {
-	//float guess;
-	float step = 0.8;
-	float avg_err=0;
-	for(size_t test=0; test < 500000; test++ )
+	double avg_err=0;
+	for(size_t test=0; test < iterations; test++ )
 	{
-		float test_value = rand_test(gen);
-		float test_value1 = rand_test(gen);
-		test_value = test_value < 0.5 ? 0.5*test_value : 1-0.5*(1-test_value);
-		test_value1 = test_value1 < 0.5 ? 0.5*test_value1 : 1-0.5*(1-test_value1);
-
+		diffbl current_cost;
+		auto sample = get_sample();
 		size_t len[2] = {3*cells_n,inputs_n+cells_n-trans_n+2};
 		for(size_t i=0,k=0; i < len[0]*len[1]; k++,i+=len[1] )
 			for(size_t j=0; j < len[1]; j++ )
 			{
-				inputs[0].val = test_value;
-				inputs[1].val = test_value1;
-				inputs[2].val=0;
-				inputs[3].val=0;
+				restore_sample(sample);
 				size_t temp[2] = {k,j};
 				gen_diffbl_vec(weights_diffbl, weights, temp, len );
-				evolve();
-				evolve();
-				weights_der[i+j] = inputs[overwrite_offs].der;
+				for(size_t ev_cycle_i=0; ev_cycle_i < evolution_cycles; ev_cycle_i++ )
+					evolve();
+				current_cost = cost(sample);
+				weights_der[i+j] = current_cost.der;
 			}
-		float target= test_value+test_value1-2*test_value*test_value1;
-		descent(target, inputs[overwrite_offs].val, step, weights, weights_der, len[0]*len[1] );
-		avg_err += abs(target-inputs[overwrite_offs].val);
+		
+		descent(target, current_cost.val, step, weights, weights_der, len[0]*len[1] );
+		avg_err += abs(current_cost.val);
 		normalize(weights, len );
-		if(test%5000 == 0)
+		if(test%show_progress_freq == 0)
 		{
-			avg_err/=5000;
-			std::cout << "guess: " << inputs[overwrite_offs].val << " target: " << target << " step: " << step << " avg_err: " << avg_err << std::endl << "weights_der: ";
-			for(size_t i=0; i < len[0]*len[1]; i++ )
-				std::cout << weights_der[i] << ' ';
-			std::cout << std::endl << "weights:\t";
-			for(size_t i=0; i < len[0]*len[1]; i+=len[1] )
+			avg_err/=show_progress_freq;
+			std::cout << "step: " << step << " avg_err: " << avg_err << std::endl;
+			if(show_weights)
 			{
-				for(size_t j=0; j < len[1]; j++ )
-					std::cout << weights[i+j] << ' ';
-				std::cout << std::endl << "\t\t" ;
+				std::cout << "weights_der: ";
+				for(size_t i=0; i < len[0]*len[1]; i++ )
+					std::cout << weights_der[i] << ' ';
+				std::cout << std::endl;
+				std::cout << "weights:\t";
+				for(size_t i=0; i < len[0]*len[1]; i+=len[1] )
+				{
+					for(size_t j=0; j < len[1]; j++ )
+						std::cout << weights[i+j] << ' ';
+					std::cout << std::endl << "\t\t" ;
+				}
+				std::cout << std::endl << "-----------------" << std::endl;
 			}
-			std::cout << std::endl << "-----------------" << std::endl;
 			avg_err=0;
 		}
-		step*=0.99999;
+		step*=decay;
 	}
+}
+
+struct mysample_t
+{ float inputs[2]; };
+
+auto mycost = [](mysample_t sample)->diffbl
+{
+	float expected = sample.inputs[0] + sample.inputs[1] - 2*sample.inputs[0]*sample.inputs[1];
+	return expected-inputs[overwrite_offs];
+};
+
+auto my_get_sample = []()->mysample_t
+{
+	mysample_t retval;
+	float test_value = rand_test(gen);
+	float test_value1 = rand_test(gen);
+	retval.inputs[0] = test_value < 0.5 ? 0.5*test_value : 1-0.5*(1-test_value);
+	retval.inputs[1] = test_value1 < 0.5 ? 0.5*test_value1 : 1-0.5*(1-test_value1);
+	return retval;
+};
+
+auto my_restore_sample = [](mysample_t sample)
+{
+	inputs[0].val = sample.inputs[0];
+	inputs[1].val = sample.inputs[1];
+	inputs[2].val = 0;
+	inputs[3].val = 0;
+};
+
+int main()
+{
+	train(0, mycost, 0.3, 0.99999, 500000, 5000, false, my_get_sample, my_restore_sample, 2 );
 	while(true)
 	{
 		std::cin >> inputs[0].val;
