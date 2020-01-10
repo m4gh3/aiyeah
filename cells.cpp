@@ -2,18 +2,61 @@
 #include <random>
 #include "desc.hpp"
 
+struct fnn_network_t
+{
+	size_t inputs_n;
+	size_t overwrite_offs;
+	size_t cells_n;
+	size_t trans_n;
+	size_t weights_n;
+	float *weights;
+	diffbl *weights_diffbl;
+	float *weights_der;
+	diffbl *inputs;
+	diffbl *outputs;
+	void init()
+	{
+		weights_n = cells_n*3*(cells_n+inputs_n+2);
+		weights = new float[weights_n];
+		weights_diffbl = new diffbl[weights_n];
+		weights_der = new float[weights_n];
+		inputs = new diffbl[inputs_n+cells_n-trans_n+2];
+		outputs = new diffbl[3*cells_n];
+	}
+	void gen_random_weights()
+	{
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_real_distribution<float> rand_f(0.0f, 1.0f );
+
+		size_t len[2] = {3*cells_n, inputs_n+cells_n-trans_n+2 };
+
+		for(size_t i=0; i < weights_n; i+=cells_n+inputs_n+2 )
+		{
+			for(size_t j=0; j < cells_n+inputs_n+2; j++ )
+			{
+				weights[i+j] = rand_f(gen);
+				weights[i+j] += 0.05;
+			}
+		}
+		normalize(weights, len );
+	}
+};
+
 const size_t inputs_n = 2;
 const size_t overwrite_offs = 2;
 const size_t cells_n = 2;
 const size_t trans_n = 0;
 const size_t weights_n = cells_n*3*(cells_n+inputs_n+2);
 
-float weights[weights_n] = {	0.75, 0.25, 0.0, 0.0, 0.0, 0.0,
+fnn_network_t net{inputs_n, overwrite_offs, cells_n, trans_n };
+
+float /*(&weights)[weights_n]*/ *&weights = net.weights; /*{	0.75, 0.25, 0.0, 0.0, 0.0, 0.0,
 				0.05, 0.9,  0.0, 0.05, 0.0, 0.0,
 				0.05, 0.05, 0.0, 0.9, 0.0, 0.0, 
 				0.75, 0.25, 0.0, 0.0, 0.0, 0.0,
 				0.05, 0.9,  0.0, 0.05, 0.0, 0.0,
-				0.05, 0.05, 0.0, 0.9, 0.0, 0.0 };
+				0.05, 0.05, 0.0, 0.9, 0.0, 0.0 };*/
 
 diffbl weights_diffbl[weights_n]; //they should be entered here
 float weights_der[weights_n];
@@ -109,7 +152,9 @@ auto my_restore_sample = [](mysample_t sample)
 
 int main()
 {
-	train(0, mycost, 0.3, 0.99999, 500000, 5000, false, my_get_sample, my_restore_sample, 2 );
+	net.init();
+	net.gen_random_weights();
+	train(0, mycost, 0.3, 0.99999, 1000000, 5000, true, my_get_sample, my_restore_sample, 2 );
 	while(true)
 	{
 		std::cin >> inputs[0].val;
