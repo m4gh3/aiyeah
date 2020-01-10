@@ -1,6 +1,8 @@
-desc: cells.cpp build/desc.o
-	g++ cells.cpp build/desc.o build/diffbl.o -O3 -std=c++2a -o cells
+xor_test: xor_test.cpp build/cells.o
+	g++ xor_test.cpp build/cells.o build/desc.o build/diffbl.o -g -O3 -o xor_test
+build/cells.o: cells.cpp build/desc.o
+	g++ cells.cpp build/desc.o build/diffbl.o -g -O3 -c -o build/cells.o
 build/desc.o: desc.cpp build/diffbl.o
-	g++ desc.cpp build/diffbl.o -std=c++2a -O3 -c -o build/desc.o
+	g++ desc.cpp build/diffbl.o -g -O3 -c -o build/desc.o
 build/diffbl.o: diffbl.cpp
-	g++ diffbl.cpp -O3 -c -o build/diffbl.o
+	g++ diffbl.cpp -g -O3 -c -o build/diffbl.o
