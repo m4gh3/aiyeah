@@ -42,7 +42,7 @@ int main()
 {
 	net.init();
 	net.gen_random_weights();
-	net.train(0, mycost, 0.3, 0.99999, 1000000, 5000, true, my_get_sample, my_restore_sample );
+	net.train(0, mycost, 0.3, 0.99999, 2000000, 5000, true, my_get_sample, my_restore_sample );
 	while(true)
 	{
 		std::cin >> net.inputs[0].val;

@@ -10,6 +10,7 @@ void fnn_network_t::init()
 	for(size_t i=0; i < inputs_n+cells_n-trans_n; i++ )
 		inputs[i] = diffbl{0,0};
 	inputs[inputs_n+cells_n-trans_n] = diffbl{1,0};
+	inputs[inputs_n+cells_n-trans_n+1] = diffbl{0,0};
 	outputs = new diffbl[3*cells_n];
 }
 

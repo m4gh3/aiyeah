@@ -1,5 +1,6 @@
 #include <iostream>
 #include <random>
+#include <cstdlib>
 #include "desc.hpp"
 
 struct fnn_network_t
@@ -32,6 +33,11 @@ template<class lambda0, class lambda1, class lambda2 > void fnn_network_t::train
 		for(size_t i=0,k=0; i < len[0]*len[1]; k++,i+=len[1] )
 			for(size_t j=0; j < len[1]; j++ )
 			{
+				if(std::isnan(inputs[overwrite_offs].val))
+				{
+					std::cout << "Got nan around iteration " << test << '/' << iterations << "\nTraining aborted. :( " << std::endl;
+					std::exit(EXIT_FAILURE);
+				}
 				restore_sample(sample);
 				size_t temp[2] = {k,j};
 				gen_diffbl_vec(weights_diffbl, weights, temp, len );
