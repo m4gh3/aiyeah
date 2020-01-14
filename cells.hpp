@@ -53,6 +53,7 @@ template<class lambda0, class lambda1, class lambda2 > void fnn_network_t::train
 		if(test%show_progress_freq == 0)
 		{
 			avg_err/=show_progress_freq;
+			std::cout << "iteration: " << test << '/' << iterations << std::endl;
 			std::cout << "step: " << step << " avg_err: " << avg_err << std::endl;
 			if(show_weights)
 			{

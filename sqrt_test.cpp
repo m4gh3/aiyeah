@@ -2,7 +2,7 @@
 
 const size_t inputs_n = 1;
 const size_t overwrite_offs = 1;
-const size_t cells_n = 4;
+const size_t cells_n = 6;
 const size_t trans_n = 0;
 
 fnn_network_t net{inputs_n, overwrite_offs, cells_n, trans_n, 5 };
@@ -25,17 +25,15 @@ auto my_get_sample = []()->float
 auto my_restore_sample = [](float sample)
 {
 	net.inputs[0].val = sample;
-	net.inputs[1].val = 0;
-	net.inputs[2].val = 0;
-	net.inputs[3].val = 0;
-	net.inputs[4].val = 0;
+	for(size_t i=1; i < 6; i++ )
+		net.inputs[i].val = 0;
 };
 
 int main()
 {
 	net.init();
 	net.gen_random_weights();
-	net.train(0, mycost, 0.3, 0.9999, 200000, 5000, true, my_get_sample, my_restore_sample );
+	net.train(0, mycost, 0.3, 0.9999, 100000, 5000, true, my_get_sample, my_restore_sample );
 	while(true)
 	{
 		float sample;
