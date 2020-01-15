@@ -1,6 +1,8 @@
 #include <iostream>
 #include <random>
 #include <cstdlib>
+#include <csignal>
+#include <csignal>
 #include "desc.hpp"
 
 struct fnn_network_t
@@ -36,7 +38,9 @@ template<class lambda0, class lambda1, class lambda2 > void fnn_network_t::train
 				if(std::isnan(inputs[overwrite_offs].val))
 				{
 					std::cout << "Got nan around iteration " << test << '/' << iterations << "\nTraining aborted. :( " << std::endl;
-					std::exit(EXIT_FAILURE);
+					//std::exit(EXIT_FAILURE);
+					std::raise(SIGINT);
+					
 				}
 				restore_sample(sample);
 				size_t temp[2] = {k,j};

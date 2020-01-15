@@ -1,4 +1,5 @@
 #include "cells.hpp"
+#include <cfenv>
 
 const size_t inputs_n = 1;
 const size_t overwrite_offs = 1;
@@ -31,6 +32,7 @@ auto my_restore_sample = [](float sample)
 
 int main()
 {
+	feenableexcept(FE_ALL_EXCEPT);
 	net.init();
 	net.gen_random_weights();
 	net.train(0, mycost, 0.3, 0.9999, 100000, 5000, true, my_get_sample, my_restore_sample );
